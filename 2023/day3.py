@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 from typing import List
 
-def run(part: int):
+def run(part: int) -> int:
     with open(Path(__file__).parent / 'inputs' / 'day3.txt', 'r') as f:
         schematic = f.readlines()
 
@@ -19,7 +19,9 @@ def run(part: int):
                 symbol_found, star_points = is_point_adjacent_to_symbol(schematic, row, idx)
                 is_part_num = is_part_num or symbol_found
                 current_stars.update(star_points)
+            # if not a digit, then check if we've been building up a number
             elif current != '':
+                # if so, need to process whether that number was a part number or near gears
                 if is_part_num:
                     total_pn += int(current)
                 for star_point in current_stars:
@@ -27,14 +29,7 @@ def run(part: int):
                 current = ''
                 is_part_num = False
                 current_stars = set()
-        if current != '':
-            if is_part_num:
-                total_pn += int(current)
-            for star_point in current_stars:
-                potential_gears[star_point].append(int(current))
-        current = ''
-        is_part_num = False
-        current_stars = set()
+        # don't need to handle the case that we ended a line with a digit since a \n character ends each line
 
     gear_total = 0
     for num_list in potential_gears.values():
