@@ -37,20 +37,65 @@ def part1(lines: List[str]) -> int:
 def part2(lines: List[str]) -> int:
     '''
     1. Get path
-    2. Convert non-path to .
+    2. Replace S with pipe
+    3. For each row:
+        Step through, tracking how many times the path cross the row
+        Any non-path space with an odd number of path crosses is on the interior
     '''
     path = get_path(lines)
+    start = path[0]
+    start_candidate_dirs = [x[2] for x in first_step(lines, *start)]
+    start_pipe = get_start_pipe(start_candidate_dirs)
+    lines[start[0]] = lines[start[0]].replace('S', start_pipe)
     count = 0
-    for r in range(len(lines)):
-        pass
+    for row, line in enumerate(lines):
+        count += count_internal(line, row, path)
+    return count
+
+def count_internal(line: str, row: int, path: List[Tuple[int, int]]) -> int:
+    cross_count = 0
+    internal_count = 0
+    prev_bend = ''
+    for col, char in enumerate(line):
+        if (row, col) in path:
+            if char == '|':
+                cross_count += 1
+            elif char in 'LF':
+                prev_bend = char
+            elif char == 'J':
+                if prev_bend == 'F':
+                    cross_count += 1
+                prev_bend = ''
+            elif char == '7':
+                if prev_bend == 'L':
+                    cross_count += 1
+                prev_bend = ''
+        else:
+            if cross_count % 2 == 1:
+                internal_count += 1
+    return internal_count
+
+
+def get_start_pipe(start_dirs: List[str]):
+    pipe_options = []
+    for d in start_dirs:
+        pipes = set()
+        for pm in PIPE_MAP.values():
+            for pipe, out_dir in pm.items():
+                if d == out_dir:
+                    pipes.add(pipe)
+        pipe_options.append(pipes)
+    # get single value out of intersection set
+    (single_pipe,) = pipe_options[0].intersection(pipe_options[1])
+    return single_pipe
 
 def get_path(lines: List[str]) -> List[Tuple[int, int]]:
     row, col = find_start(lines)
-    r, c, d = first_step(lines, row, col)
-    path = [(r, c)]
+    path = [(row, col)]
+    r, c, d = first_step(lines, row, col)[0]
     while (r, c) != (row, col):
-        r, c, d = next_step(lines, r, c, d)
         path.append((r, c))
+        r, c, d = next_step(lines, r, c, d)
     return path
 
 def next_step(lines: List[str], row:int, col: int, prev_dir: str) -> (int, int, str):
@@ -64,7 +109,8 @@ def next_step(lines: List[str], row:int, col: int, prev_dir: str) -> (int, int, 
     )
     return steps[new_dir](row, col)
 
-def first_step(lines: List[str], row: int, col: int) -> (int, int, str):
+def first_step(lines: List[str], row: int, col: int) -> List[Tuple[int, int, str]]:
+    candidates = []
     for r, c, d in [_go_north(row, col), _go_east(row, col), _go_south(row, col), _go_west(row, col)]:
         if r < 0 or c < 0:
             continue
@@ -72,8 +118,10 @@ def first_step(lines: List[str], row: int, col: int) -> (int, int, str):
             continue
         pipe = lines[r][c]
         if pipe in PIPE_MAP[d]:
-            return r, c, d
-    raise ValueError(f'Could not find valid pipe from starting point ({row}, {col})')
+            candidates.append((r, c, d))
+    if len(candidates) != 2:
+        raise ValueError(f'Could not start from starting point ({row}, {col})')
+    return candidates
 
 def find_start(lines: List[str]) -> (int, int):
     row = 0
