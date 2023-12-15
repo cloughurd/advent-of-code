@@ -53,6 +53,10 @@ def part2(lines: List[str]) -> int:
     return count
 
 def count_internal(line: str, row: int, path: List[Tuple[int, int]]) -> int:
+    cross_pairs = {
+        'L': '7',
+        'F': 'J',
+    }
     cross_count = 0
     internal_count = 0
     prev_bend = ''
@@ -60,14 +64,10 @@ def count_internal(line: str, row: int, path: List[Tuple[int, int]]) -> int:
         if (row, col) in path:
             if char == '|':
                 cross_count += 1
-            elif char in 'LF':
+            elif char in cross_pairs:
                 prev_bend = char
-            elif char == 'J':
-                if prev_bend == 'F':
-                    cross_count += 1
-                prev_bend = ''
-            elif char == '7':
-                if prev_bend == 'L':
+            elif char in cross_pairs.values():
+                if char == cross_pairs[prev_bend]:
                     cross_count += 1
                 prev_bend = ''
         else:
