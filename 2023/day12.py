@@ -19,21 +19,13 @@ def part2(lines: List[str]) -> int:
     return np.sum(counts_1 * (mult ** 4))
 
 def run(lines: List[str], repeater: int, verbose: bool = False) -> int:
-    #new_lines = []
     counts = []
     for i, line in enumerate(lines):
-        # print('\n\n' + line)
         sl = SpringLine.from_str(line, repeater)
         line_count = sl.get_combination_count()
-        # count += line_count
         counts.append(line_count)
         if verbose and i % 5 == 0:
             print(i, line_count, datetime.now())
-        # new_lines.append(str(line_count) + '-- ' + line)
-    #     if count > 30:
-    #         break
-    # with open('test.txt', 'w') as f:
-    #     f.writelines(new_lines)
     return counts
 
 @dataclass
@@ -46,7 +38,6 @@ class SpringLine:
         self._prune_unknowns()
         for potential in self._get_group_options():
             if self._check_valid(potential):
-                # print(potential)
                 count += 1
         return count
 
