@@ -10,13 +10,22 @@ from datetime import datetime
 
 
 def part1(lines: List[str]) -> int:
+    return run(lines, False)
+
+def part2(lines: List[str]) -> int:
+    return run(lines, True)
+
+def run(lines: List[str], allow_smudge: bool) -> int:
     subset = []
     count_vertical = 0
     count_horizontal = 0
     for i, line in enumerate(lines):
         if line == '\n' or i == len(lines)-1:
             p = Pattern.from_lines(subset)
-            row, col = p.mirror_point
+            if allow_smudge:
+                row, col = p.smudge_point
+            else:
+                row, col = p.mirror_point
             if row != -1:
                 count_horizontal += row
             else:
@@ -26,12 +35,20 @@ def part1(lines: List[str]) -> int:
             subset.append(line)
     return (count_horizontal * 100) + count_vertical
 
-def part2(lines: List[str]) -> int:
-    pass
-
 @dataclass
 class Pattern:
     data: np.ndarray
+
+    @property
+    def smudge_point(self) -> (int, int):
+        for i in range(1, self.data.shape[0]):
+            dist = min(i, self.data.shape[0]-i)
+            if np.abs(self.data[i-dist:i, :] - np.flip(self.data[i:i+dist, :], axis=0)).sum() == 1:
+                return i, -1
+        for i in range(1, self.data.shape[1]):
+            dist = min(i, self.data.shape[1]-i)
+            if np.abs(self.data[:, i-dist:i] - np.flip(self.data[:, i:i+dist], axis=1)).sum() == 1:
+                return -1, i
 
     @property
     def mirror_point(self) -> (int, int):
