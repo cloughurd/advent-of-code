@@ -1,15 +1,7 @@
 import argparse
-from collections import defaultdict
-from dataclasses import dataclass
-from itertools import combinations
-import math
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
-import numpy as np
-from datetime import datetime
+from typing import List, Set, Tuple
 import sys
-from cachetools import LRUCache, cached
-from cachetools.keys import hashkey
 
 
 def part1(lines: List[str]) -> int:
