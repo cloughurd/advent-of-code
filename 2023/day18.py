@@ -19,9 +19,7 @@ def part1(lines: List[str]) -> int:
     sys.setrecursionlimit(10000)
     path = get_path(lines)
     grid = form_array(path)
-    print(grid.size)
     fill_outside(grid, 2)
-    np.savetxt('test.txt', grid, fmt='%i')
     return grid.size - (grid == 2).sum()
 
 def part2(lines: List[str]) -> int:
@@ -51,64 +49,25 @@ def form_array(path: List[Tuple[int, int]]) -> np.ndarray:
     return grid
 
 def fill_outside(grid: np.ndarray, fill_val: int):
-    # start from top left and fill down
-    for x in range(grid.shape[0]):
-        for y in range(grid.shape[1]):
-            if grid[x, y] != 0:
-                continue
-            fill = False
-            if x == 0:
-                fill = True
-            elif y == 0:
-                fill = True
-            elif x == grid.shape[0]-1:
-                fill = True
-            elif y == grid.shape[1]-1:
-                fill = True
-            elif (grid[x-1:x+1, y-1:y+1] == fill_val).any():
-                fill = True
+    points = set()
+    for i in range(grid.shape[0]):
+        if grid[i, 0] == 0:
+            grid[i, 0] = fill_val
+            points.update(spread_fill(grid, i, 0, fill_val))
+        if grid[i, grid.shape[1]-1] == 0:
+            grid[i, grid.shape[1]-1] = fill_val
+            points.update(spread_fill(grid, i, grid.shape[1]-1, fill_val))
+    for i in range(grid.shape[1]):
+        if grid[0, i] == 0:
+            grid[0, i] = fill_val
+            points.update(spread_fill(grid, 0, i, fill_val))
+        if grid[grid.shape[0]-1, i] == 0:
+            grid[grid.shape[0]-1, i] = fill_val
+            points.update(spread_fill(grid, grid.shape[0]-1, i, fill_val))
 
-            if fill:
-                grid[x, y] = fill_val
-    # restart from bottom right to fill gaps
-    for x in range(grid.shape[0]):
-        for y in range(grid.shape[1]):
-            x = grid.shape[0]-1-x
-            y = grid.shape[1]-1-y
-            if grid[x, y] != 0:
-                continue
-            fill = False
-            if x == 0:
-                fill = True
-            elif y == 0:
-                fill = True
-            elif x == grid.shape[0]-1:
-                fill = True
-            elif y == grid.shape[1]-1:
-                fill = True
-            elif (grid[x-1:x+1, y-1:y+1] == fill_val).any():
-                fill = True
-
-            if fill:
-                grid[x, y] = fill_val
-            # if x == 0 and grid[x, y] == 0:
-            #     grid
-            # if grid[i, 0] == 0:
-            #     grid[i, 0] = fill_val
-    # for i in range(grid.shape[0]):
-    #     if grid[i, 0] == 0:
-    #         grid[i, 0] = fill_val
-    #         spread_fill(grid, i, 0, fill_val)
-    #     if grid[i, grid.shape[1]-1] == 0:
-    #         grid[i, grid.shape[1]-1] = fill_val
-    #         spread_fill(grid, i, grid.shape[1]-1, fill_val)
-    # for i in range(grid.shape[1]):
-    #     if grid[0, i] == 0:
-    #         grid[0, i] = fill_val
-    #         spread_fill(grid, 0, i, fill_val)
-    #     if grid[grid.shape[0]-1, i] == 0:
-    #         grid[grid.shape[0]-1, i] = fill_val
-    #         spread_fill(grid, grid.shape[0]-1, i, fill_val)
+    while points:
+        x, y = points.pop()
+        points.update(spread_fill(grid, x, y, fill_val))
 
 def spread_fill(grid: np.ndarray, x: int, y: int, fill_val: int):
     marked = []
@@ -122,8 +81,7 @@ def spread_fill(grid: np.ndarray, x: int, y: int, fill_val: int):
             continue
         grid[r, c] = fill_val
         marked.append((r, c))
-    for r, c in marked:
-        spread_fill(grid, r, c, fill_val)
+    return marked
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
