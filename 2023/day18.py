@@ -15,15 +15,25 @@ DIR_MAP = {
     'L': 'W',
 }
 
+DIR_MAP_HEX = {
+    '0': 'E',
+    '1': 'S',
+    '2': 'W',
+    '3': 'N',
+}
+
 def part1(lines: List[str]) -> int:
-    sys.setrecursionlimit(10000)
     path = get_path(lines)
     grid = form_array(path)
     fill_outside(grid, 2)
     return grid.size - (grid == 2).sum()
 
 def part2(lines: List[str]) -> int:
-    pass
+    path = get_path_hex(lines)
+    print(len(path))
+    grid = form_array(path, use_bool=True)
+    fill_outside(grid, 1)
+    return (grid == 0).sum() + len(path)
 
 def get_path(lines: List[str]) -> List[Tuple[int, int]]:
     row, col = 0, 0
@@ -36,14 +46,33 @@ def get_path(lines: List[str]) -> List[Tuple[int, int]]:
             path.append((row, col))
     return path
 
-def form_array(path: List[Tuple[int, int]]) -> np.ndarray:
+def get_path_hex(lines: List[str]) -> List[Tuple[int, int]]:
+    row, col = 0, 0
+    path = [(row, col)]
+    for line in lines:
+        _, _, hex = line.split(maxsplit=2)
+        hex_steps = hex[2:-3]
+        hex_dir = hex[-3]
+        direction = DIR_MAP_HEX[hex_dir]
+        count = int(hex_steps, base=16)
+        print(count, direction)
+        for i in range(count):
+            row, col = shared.move_in_grid(row, col, direction)
+            path.append((row, col))
+    return path
+
+def form_array(path: List[Tuple[int, int]], use_bool: bool = False) -> np.ndarray:
     min_row = min(path, key=lambda x: x[0])[0]
     min_col = min(path, key=lambda x: x[1])[1]
     max_row = max(path, key=lambda x: x[0])[0]
     max_col = max(path, key=lambda x: x[1])[1]
     row_size = max_row - min_row + 1
     col_size = max_col - min_col + 1
-    grid = np.zeros(shape=(row_size, col_size), dtype='int8')
+    print(row_size, col_size)
+    if use_bool:
+        grid = np.zeros(shape=(row_size, col_size), dtype=np.bool_)
+    else:
+        grid = np.zeros(shape=(row_size, col_size), dtype=np.int8)
     for r, c in path:
         grid[r - min_row, c - min_col] = 1
     return grid
