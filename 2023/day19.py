@@ -20,7 +20,13 @@ def part1(lines: List[str]) -> int:
     return sum([x.total_rating for x in accepted])
 
 def part2(lines:List[str]) -> int:
-    pass
+    bp = [i for i in range(len(lines)) if lines[i] == '\n'][0]
+    w = WorkflowEngine.from_lines(lines[0:bp])
+    print(w.workflows['in'].get_ranges())
+
+def range_difference(r1: range, r2: range) -> range:
+    diff = set(r1).difference(r2)
+    return range(min(diff), max(diff)+1)
 
 @dataclass
 class Part:
@@ -60,6 +66,12 @@ class WorkflowStep:
             return num < self.threshold
         return num > self.threshold
 
+    @property
+    def action_range(self) -> range:
+        if self.comparison == '<':
+            return range(1, self.threshold)
+        return range(self.threshold+1, 4001)
+
 @dataclass
 class Workflow:
     name: str
@@ -82,6 +94,19 @@ class Workflow:
             if s.test(p.ratings[s.value]):
                 return s.destination
         return self.default_destination
+
+    def get_ranges(self):
+        leftovers = dict(
+            x = range(1, 4001),
+            m = range(1, 4001),
+            a = range(1, 4001),
+            s = range(1, 4001),
+        )
+        ranges = []
+        for s in self.steps:
+            ranges.append((s.value, s.action_range, s.destination))
+            leftovers[s.value] = range_difference(leftovers[s.value], s.action_range)
+        return ranges + [(k, v, self.default_destination) for k, v in leftovers.items()]
 
 @dataclass
 class WorkflowEngine:
